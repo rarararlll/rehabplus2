@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/rehabplus-login.js',
                 'resources/css/rehabplus-dashboard.css',
                 'resources/js/rehabplus-dashboard.js',
+                'resources/css/rehabplus-darkmode.css',
             ],
             refresh: true,
         }),
