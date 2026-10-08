@@ -67,9 +67,9 @@
             letter-spacing: -.02em;
             color: var(--text) !important;
             white-space: nowrap;
-            display: inline-flex;
+            display: flex;
             align-items: center;
-            gap: .45rem;
+            gap: 0.5rem;
             margin-right: auto;
         }
         .navbar-brand i {
@@ -118,14 +118,14 @@
         }
         .sidebar {
             width: var(--sidebar-w);
-            height: 100vh;
+            height: calc(100vh - 74px);
             background: var(--sidebar);
             border-right: 1px solid var(--border);
-            padding: 20px 18px 14px;
+            padding: 1.5rem 1rem;
             position: fixed;
             left: 0;
-            top: 0;
-            overflow: hidden;
+            top: 74px;
+            overflow-y: auto;
         }
         .nav-section {
             color: var(--muted);
