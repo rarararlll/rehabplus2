@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExerciseController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PatientPortalController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,13 +55,20 @@ Route::middleware(['auth.rehab'])->group(function () {
     Route::post('/appointments/{id}/status', [AppointmentController::class, 'changeStatus'])->name('appointments.status');
 
     Route::get('/analytics', [DashboardController::class, 'analytics'])->name('analytics');
+    Route::get('/reports', [AdminPageController::class, 'reports'])->name('reports');
+    Route::get('/billing', [PaymentController::class, 'index'])->name('billing');
+    Route::post('/billing', [PaymentController::class, 'store'])->name('billing.store');
+    Route::resource('inventory', InventoryController::class);
+    Route::get('/schedule', [AdminPageController::class, 'schedule'])->name('schedule');
+    Route::get('/notes', [AdminPageController::class, 'notes'])->name('notes');
+    Route::get('/assessments', [AdminPageController::class, 'assessments'])->name('assessments');
 
     Route::middleware(['role:superadmin'])->group(function () {
         Route::get('/patient-statistics', [DashboardController::class, 'patientStatistics'])->name('patient-statistics');
         Route::get('/patient-statistics/export/csv', [DashboardController::class, 'exportPatientStatisticsCsv'])->name('patient-statistics.export.csv');
         Route::get('/patient-statistics/export/pdf', [DashboardController::class, 'exportPatientStatisticsPdf'])->name('patient-statistics.export.pdf');
 
-        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users', [AdminPageController::class, 'users'])->name('users.index');
         Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
         Route::post('/users/create-patient', [UserController::class, 'createPatient'])->name('users.createPatient');

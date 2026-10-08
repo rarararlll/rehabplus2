@@ -1,61 +1,110 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('title', 'RehabPlus Dashboard')
+@section('title', 'Dashboard - RehabPlus')
 
 @section('content')
-    <div class="topbar">
-        <div class="brand">
-            <div class="brand-mark">R</div>
-            <div>
-                <div class="brand-title">RehabPlus</div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="page-title mb-1">RehabPlus Dashboard</h2>
+            <p class="page-subtitle mb-0">Physical Therapy Recovery Monitoring</p>
+        </div>
+
+        <a href="{{ route('patients.create') }}" class="btn btn-primary d-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg"></i>
+            Add Patient
+        </a>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <x-admin.stat-card label="Total Patients" :value="$totalPatients" icon="bi-people-fill" tone="info" />
+        <x-admin.stat-card label="Avg Compliance" :value="$avgCompliance . '%'" icon="bi-clipboard2-check-fill" tone="success" />
+        <x-admin.stat-card label="Avg Pain Level" :value="$avgPain" icon="bi-heart-pulse-fill" tone="danger" />
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">Recovery Analytics</div>
+                <div class="card-body">
+                    <canvas id="recoveryChart"></canvas>
+                    @unless ($hasRecoveryData)
+                        <div class="alert alert-info mt-3 mb-0">
+                            Add an exercise record from a patient profile to show recovery progress and pain analytics.
+                        </div>
+                    @endunless
+                </div>
             </div>
         </div>
-        <div class="nav">
-            <a href="{{ route('patients.index') }}">Patients</a>
-            <a href="{{ route('appointments.index') }}">Appointments</a>
-            <a href="{{ route('analytics') }}">Analytics</a>
-            <a href="{{ route('users.index') }}">Users</a>
-            <form method="POST" action="{{ route('logout') }}" class="inline">@csrf<button type="submit">Logout</button></form>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">Patient Conditions</div>
+                <div class="card-body">
+                    <canvas id="conditionChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div style="margin-bottom: 18px;">
-        <h1 style="font-size: 2.1rem; margin-bottom: 6px;">RehabPlus Dashboard</h1>
-        <p style="color: var(--muted); margin: 0;">Operational overview for patient care, appointments, and progress.</p>
-    </div>
-
-    <div class="stats">
-        <div class="stat"><strong>Total Patients</strong><div style="font-size:30px; margin-top:8px;">{{ $totalPatients }}</div></div>
-        <div class="stat"><strong>Avg Compliance</strong><div style="font-size:30px; margin-top:8px;">{{ $avgCompliance }}%</div></div>
-        <div class="stat"><strong>Avg Pain</strong><div style="font-size:30px; margin-top:8px;">{{ $avgPain }}</div></div>
-        <div class="stat"><strong>Recovery Data</strong><div style="font-size:30px; margin-top:8px;">{{ $hasRecoveryData ? 'Live' : 'No data' }}</div></div>
-    </div>
-
-    <div class="panel" style="margin-top: 24px;">
-        <div class="toolbar">
-            <h3 style="margin: 0;">Recent Exercise Records</h3>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>Patient Recovery Overview</span>
+            <div class="input-group" style="width:250px;">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="patientSearch" class="form-control" placeholder="Search patient...">
+            </div>
         </div>
-        <div class="table-wrap">
-            <table>
+
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0" id="patientsTable">
                 <thead>
                     <tr>
                         <th>Patient</th>
-                        <th>Exercise</th>
-                        <th>Completed</th>
+                        <th>Condition</th>
+                        <th>Sessions</th>
+                        <th>Compliance</th>
                         <th>Pain</th>
+                        <th>Recovery</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($recentRecords as $record)
+                    @foreach ($patientStats as $patient)
                         <tr>
-                            <td>{{ $record['patient_name'] ?? 'Unknown' }}</td>
-                            <td>{{ $record['exercise_name'] }}</td>
-                            <td>{{ $record['sets_completed'] }}/{{ $record['sets_prescribed'] }}</td>
-                            <td>{{ $record['pain_level'] }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-info text-dark fw-bold d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
+                                        {{ strtoupper(substr($patient['name'], 0, 1)) }}
+                                    </div>
+                                    {{ $patient['name'] }}
+                                </div>
+                            </td>
+                            <td>{{ $patient['condition'] }}</td>
+                            <td>{{ $patient['total_sessions'] }}</td>
+                            <td>
+                                <div class="progress" style="height:8px;">
+                                    <div class="progress-bar bg-info" style="width:{{ min((float) $patient['compliance_rate'], 100) }}%"></div>
+                                </div>
+                                <small>{{ $patient['compliance_rate'] }}%</small>
+                            </td>
+                            <td><span class="badge bg-warning text-dark">{{ $patient['avg_pain'] }}/10</span></td>
+                            <td><span class="text-success fw-semibold">{{ $patient['recovery_score'] }}%</span></td>
+                            <td>
+                                <a href="{{ route('patients.show', $patient['id']) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
     </div>
+
+    <script>
+        window.rehabPlusDashboardData = {
+            recoveryLabels: @json($recoveryLabels ?? []),
+            recoveryValues: @json($recoveryValues ?? []),
+            conditionLabels: @json(array_keys($conditionCounts ?? [])),
+            conditionValues: @json(array_values($conditionCounts ?? []))
+        };
+    </script>
 @endsection

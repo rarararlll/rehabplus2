@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\SuperAdmin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -45,16 +46,27 @@ class AuthController extends Controller
 
     public function attempt(Request $request)
     {
-        $email = $request->input('email');
-        $password = $request->input('password');
-
+        $email = trim((string) $request->input('email'));
+        $password = (string) $request->input('password');
         $user = User::where('email', $email)->first();
 
         if ($user && $user->role === 'patient') {
             return back()->with('error', 'Patient accounts cannot use the admin login. Use the patient portal login.')->withInput();
         }
 
-        if ($user && (int) $user->is_active === 1 && Auth::attempt(['email' => $email, 'password' => $password])) {
+        $superAdmin = SuperAdmin::where('email', $email)->first();
+
+        if ($superAdmin && password_verify($password, $superAdmin->password)) {
+            Auth::login($superAdmin);
+            $request->session()->regenerate();
+
+            return redirect()->intended('/dashboard');
+        }
+
+        if ($user && (int) $user->is_active === 1 && password_verify($password, $user->password)) {
+            Auth::login($user);
+            $request->session()->regenerate();
+
             return redirect()->intended('/dashboard');
         }
 
@@ -63,22 +75,27 @@ class AuthController extends Controller
 
     public function attemptPatient(Request $request)
     {
-        $email = $request->input('email');
-        $password = $request->input('password');
-
+        $email = trim((string) $request->input('email'));
+        $password = (string) $request->input('password');
         $user = User::where('email', $email)->first();
 
-        if ($user && $user->role === 'patient' && (int) $user->is_active === 1 && Auth::attempt(['email' => $email, 'password' => $password])) {
+        if ($user && $user->role === 'patient' && (int) $user->is_active === 1 && password_verify($password, $user->password)) {
+            Auth::login($user);
+            $request->session()->regenerate();
+
             return redirect()->route('patient.portal');
         }
 
         return back()->with('error', 'Invalid patient email or password.')->withInput();
     }
 
-    public function doLogout()
+    public function doLogout(Request $request)
     {
         Auth::logout();
 
-        return redirect()->route('login.page')->with('success', 'You have been signed out.');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login.page');
     }
 }

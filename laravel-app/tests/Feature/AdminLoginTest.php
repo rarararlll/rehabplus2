@@ -27,5 +27,6 @@ class AdminLoginTest extends TestCase
 
         $response->assertRedirect('/dashboard');
         $this->assertAuthenticated();
+        $this->assertSame(1, auth()->id());
     }
 }
