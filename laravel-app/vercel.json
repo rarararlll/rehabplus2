@@ -1,8 +1,7 @@
 {
-  "buildCommand": "composer install --no-dev --optimize-autoloader && npm ci && npm run build",
+  "buildCommand": "npm ci && npm run build",
   "outputDirectory": "public",
   "devCommand": "php artisan serve",
-  "installCommand": "composer install && npm ci",
   "rewrites": [
     {
       "source": "/(.*)",
