@@ -4,19 +4,21 @@ namespace Tests\Unit;
 
 use App\Models\PatientModel;
 use App\Models\UserModel;
-use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
+use Tests\Support\RehabPlusTestCase;
 
-class RehabPlusTest extends CIUnitTestCase
+/**
+ * Regression guards for the RehabPlus domain logic.
+ *
+ * These tests run against a fresh in-memory SQLite database that is migrated
+ * and seeded (UserSeeder + ClinicalSeeder) before each test class.
+ */
+class RehabPlusTest extends RehabPlusTestCase
 {
-    use DatabaseTestTrait;
+    // ---------------------------------------------------------------
+    // Pure logic (no database required)
+    // ---------------------------------------------------------------
 
-    protected $migrate     = true;
-    protected $migrateOnce = false;
-    protected $refresh     = true;
-    protected $seed        = 'UserSeeder';
-
-    // Test 1: Password hashing
+    /** Guard: passwords are never stored in plain text. */
     public function testPasswordIsHashed(): void
     {
         $plain  = 'secret123';
@@ -26,7 +28,21 @@ class RehabPlusTest extends CIUnitTestCase
         $this->assertNotEquals($plain, $hashed);
     }
 
-    // Test 2: UserModel finds user by email
+    /** Guard: `Compliance rate calculation` math in DashboardController. */
+    public function testComplianceRateCalculation(): void
+    {
+        $prescribed = 10;
+        $completed  = 8;
+        $compliance = $prescribed > 0 ? round($completed / $prescribed * 100, 1) : 0;
+
+        $this->assertEquals(80.0, $compliance);
+    }
+
+    // ---------------------------------------------------------------
+    // UserModel behaviour
+    // ---------------------------------------------------------------
+
+    /** Guard: superadmin user is findable by email and has the right role. */
     public function testFindUserByEmail(): void
     {
         $model = new UserModel();
@@ -36,7 +52,7 @@ class RehabPlusTest extends CIUnitTestCase
         $this->assertEquals('superadmin', $user['role']);
     }
 
-    // Test 3: UserModel returns users by role
+    /** Guard: users can be filtered by role. */
     public function testGetUsersByRole(): void
     {
         $model   = new UserModel();
@@ -47,7 +63,27 @@ class RehabPlusTest extends CIUnitTestCase
         $this->assertEquals('manager', $managers[0]['role']);
     }
 
-    // Test 4: PatientModel validation rejects empty name
+    // ---------------------------------------------------------------
+    // UserModel::normalizeRoleForStaffAccount
+    // ---------------------------------------------------------------
+
+    /** Guard: staff account roles never allow the patient role. */
+    public function testStaffRoleValidationRejectsPatientRole(): void
+    {
+        $this->assertSame('staff', UserModel::normalizeRoleForStaffAccount('patient'));
+        $this->assertSame('staff', UserModel::normalizeRoleForStaffAccount(''));
+        $this->assertSame('staff', UserModel::normalizeRoleForStaffAccount(null));
+        $this->assertSame('therapist', UserModel::normalizeRoleForStaffAccount('therapist'));
+        $this->assertSame('manager', UserModel::normalizeRoleForStaffAccount('manager'));
+        $this->assertSame('superadmin', UserModel::normalizeRoleForStaffAccount('superadmin'));
+        $this->assertSame('staff', UserModel::normalizeRoleForStaffAccount('unknown-role'));
+    }
+
+    // ---------------------------------------------------------------
+    // PatientModel validation
+    // ---------------------------------------------------------------
+
+    /** Guard: PatientModel rejects an empty name. */
     public function testPatientValidationFailsWithEmptyName(): void
     {
         $model  = new PatientModel();
@@ -57,22 +93,13 @@ class RehabPlusTest extends CIUnitTestCase
         $this->assertArrayHasKey('name', $model->errors());
     }
 
-    // Test 5: Staff account roles exclude patient
-    public function testStaffRoleValidationRejectsPatientRole(): void
+    /** Guard: PatientModel accepts a valid record. */
+    public function testPatientValidationAcceptsValidRecord(): void
     {
-        $this->assertSame('staff', UserModel::normalizeRoleForStaffAccount('patient'));
-        $this->assertSame('therapist', UserModel::normalizeRoleForStaffAccount('therapist'));
-        $this->assertSame('manager', UserModel::normalizeRoleForStaffAccount('manager'));
-        $this->assertSame('superadmin', UserModel::normalizeRoleForStaffAccount('superadmin'));
-    }
+        $model  = new PatientModel();
+        $result = $model->insert(['name' => 'Valid Patient', 'condition' => 'Knee Rehab']);
 
-    // Test 6: Compliance rate calculation
-    public function testComplianceRateCalculation(): void
-    {
-        $prescribed = 10;
-        $completed  = 8;
-        $compliance = $prescribed > 0 ? round($completed / $prescribed * 100, 1) : 0;
-
-        $this->assertEquals(80.0, $compliance);
+        $this->assertNotFalse($result);
+        $this->assertEmpty($model->errors());
     }
 }

@@ -124,23 +124,3 @@ _modules/*
 
 /results/
 /phpunit*.xml
-
-#-------------------------
-# Laravel
-#-------------------------
-laravel-app/.env
-laravel-app/vendor/
-laravel-app/node_modules/
-laravel-app/public/build/
-laravel-app/storage/*.key
-laravel-app/.env.backup
-
-
-# Temporary test files
-laravel-app/cookies.txt
-laravel-app/headers.txt
-laravel-app/login-*.txt
-laravel-app/native-login-*.txt
-*.tmp
-cookies*.txt
-

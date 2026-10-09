@@ -47,4 +47,14 @@ class UserModel extends Model
     {
         return $this->where('email', $email)->first();
     }
+
+    /**
+     * Return every user record that has the given role.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function getByRole(string $role): array
+    {
+        return $this->where('role', $role)->findAll();
+    }
 }

@@ -586,7 +586,9 @@ class DashboardController extends BaseController
             ->countAllResults();
 
         $activePatients = (int) $appointmentModel->db->query(
-            "SELECT COUNT(DISTINCT patient) AS total FROM appointments WHERE status != 'Cancelled'"
+            "SELECT COUNT(DISTINCT patient) AS total
+             FROM {$appointmentModel->DBPrefix}appointments
+             WHERE status != 'Cancelled'"
         )->getRow()->total;
 
         $totalAppointments = $appointmentModel->countAllResults();

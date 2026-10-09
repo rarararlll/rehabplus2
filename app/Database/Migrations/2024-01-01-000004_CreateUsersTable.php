@@ -8,12 +8,16 @@ class CreateUsersTable extends Migration
 {
     public function up(): void
     {
+        $roleType = $this->db->DBDriver === 'SQLite3'
+            ? ['type' => 'VARCHAR', 'constraint' => 20]
+            : ['type' => 'ENUM', 'constraint' => ['superadmin', 'manager', 'staff'], 'default' => 'staff'];
+
         $this->forge->addField([
             'id'         => ['type' => 'INT', 'auto_increment' => true],
             'name'       => ['type' => 'VARCHAR', 'constraint' => 100],
             'email'      => ['type' => 'VARCHAR', 'constraint' => 150, 'unique' => true],
             'password'   => ['type' => 'VARCHAR', 'constraint' => 255],
-            'role'       => ['type' => 'ENUM', 'constraint' => ['superadmin', 'manager', 'staff'], 'default' => 'staff'],
+            'role'       => $roleType,
             'avatar'     => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'is_active'  => ['type' => 'TINYINT', 'constraint' => 1, 'default' => 1],
             'created_at' => ['type' => 'DATETIME', 'null' => true],

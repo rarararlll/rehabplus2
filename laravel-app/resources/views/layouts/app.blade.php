@@ -9,7 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    @vite(['resources/css/rehabplus-darkmode.css'])
+    @vite(['resources/css/rehabplus-dashboard.css'])
     <style>
         :root {
             --primary:#14b8a6;
@@ -67,9 +67,9 @@
             letter-spacing: -.02em;
             color: var(--text) !important;
             white-space: nowrap;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: .45rem;
             margin-right: auto;
         }
         .navbar-brand i {
@@ -118,14 +118,14 @@
         }
         .sidebar {
             width: var(--sidebar-w);
-            height: calc(100vh - 74px);
+            height: 100vh;
             background: var(--sidebar);
             border-right: 1px solid var(--border);
-            padding: 1.5rem 1rem;
+            padding: 20px 18px 14px;
             position: fixed;
             left: 0;
-            top: 74px;
-            overflow-y: auto;
+            top: 0;
+            overflow: hidden;
         }
         .nav-section {
             color: var(--muted);
