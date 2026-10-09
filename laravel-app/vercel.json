@@ -2,14 +2,8 @@
   "buildCommand": "npm ci && npm run build",
   "outputDirectory": "public",
   "devCommand": "php artisan serve",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index.php"
-    }
-  ],
   "functions": {
-    "api/index.php": {
+    "public/index.php": {
       "runtime": "vercel-php@0.7.3"
     }
   }
