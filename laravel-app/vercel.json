@@ -3,7 +3,6 @@
   "outputDirectory": "public",
   "devCommand": "php artisan serve",
   "installCommand": "composer install && npm ci",
-  "framework": "laravel",
   "rewrites": [
     {
       "source": "/(.*)",
