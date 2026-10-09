@@ -4,6 +4,10 @@
   "devCommand": "php artisan serve",
   "rewrites": [
     {
+      "source": "/build/(.*)",
+      "destination": "/build/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/api/index.php"
     }
