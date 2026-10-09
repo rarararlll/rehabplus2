@@ -3,7 +3,7 @@
   "outputDirectory": "public",
   "devCommand": "php artisan serve",
   "functions": {
-    "public/index.php": {
+    "api/index.php": {
       "runtime": "vercel-php@0.7.3"
     }
   }
